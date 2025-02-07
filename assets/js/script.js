@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const userInput = document.getElementById('user-input');
     const levelDisplay = document.getElementById('level');
     const wpmDisplay = document.getElementById('wpm');
+    const retryButton = document.getElementById('retry-btn');
 
     let startTime;
     let endTime;
@@ -152,6 +153,18 @@ document.addEventListener('DOMContentLoaded', function () {
         levelDisplay.textContent = selectedDifficulty.charAt(0).toUpperCase() + selectedDifficulty.slice(1);
     }
 
+    function retryTest() {
+        // Reset all displays
+        timeDisplay.textContent = '0';
+        wpmDisplay.textContent = '0';
+        
+        // Get a new random text
+        updateSampleText();
+        
+        // Initialize the test
+        initializeTest();
+    }
+
     difficultySelect.addEventListener('change', () => {
         updateSampleText();
         initializeTest();
@@ -159,6 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
     
     startButton.addEventListener('click', initializeTest);
     stopButton.addEventListener('click', stopTest);
+    retryButton.addEventListener('click', retryTest);
     
     userInput.addEventListener('input', (e) => {
         if (e.target.value.length === 1) {
