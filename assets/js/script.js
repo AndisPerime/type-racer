@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const retryButton = document.getElementById('retry-btn');
     const instructionsBtn = document.getElementById('instructions-btn');
     const instructionsModal = new bootstrap.Modal(document.getElementById('instructionsModal'));
+    const authorDisplay = document.getElementById('author');
 
     let startTime;
     let endTime;
@@ -29,9 +30,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error('Network response was not ok');
             }
             const data = await response.json();
-            // ZenQuotes returns an array with a single quote object
-            // Format: [{"q":"quote text","a":"author","h":"html encoded quote"}]
-            return data[0].q;
+            return {
+                text: data[0].q,
+                author: data[0].a
+            };
         } catch (error) {
             console.error('Error fetching quote:', error);
             return getBackupQuote(); // Fallback to backup quotes
@@ -41,19 +43,19 @@ document.addEventListener('DOMContentLoaded', function () {
     function getBackupQuote() {
         const backupQuotes = {
             easy: [
-                "The cat sat on the mat.",
-                "Life is what happens to you while you're busy making other plans.",
-                "Keep it simple, silly."
+                { text: "The cat sat on the mat.", author: "Anonymous" },
+                { text: "Life is what happens to you while you're busy making other plans.", author: "John Lennon" },
+                { text: "Keep it simple, silly.", author: "Unknown" }
             ],
             medium: [
-                "To be or not to be, that is the question.",
-                "All that glitters is not gold, but it sure is shiny.",
-                "A journey of a thousand miles begins with a single step forward."
+                { text: "To be or not to be, that is the question.", author: "William Shakespeare" },
+                { text: "All that glitters is not gold, but it sure is shiny.", author: "Unknown" },
+                { text: "A journey of a thousand miles begins with a single step forward.", author: "Lao Tzu" }
             ],
             hard: [
-                "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-                "In the end, it's not the years in your life that count, it's the life in your years.",
-                "The only way to do great work is to love what you do and never give up."
+                { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+                { text: "In the end, it's not the years in your life that count, it's the life in your years.", author: "Abraham Lincoln" },
+                { text: "The only way to do great work is to love what you do and never give up.", author: "Steve Jobs" }
             ]
         };
 
@@ -69,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         while (attempts < maxAttempts) {
             quote = await fetchQuote();
-            const wordCount = quote.split(' ').length;
+            const wordCount = quote.text.split(' ').length;
 
             // Cache the quote in appropriate difficulty level if it matches criteria
             if (difficulty === 'easy' && wordCount <= 8) {
@@ -108,15 +110,18 @@ document.addEventListener('DOMContentLoaded', function () {
         const selectedDifficulty = difficultySelect.value;
         
         sampleTextDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+        authorDisplay.textContent = 'Loading...';
         userInput.disabled = true;
 
         try {
             const quote = await getQuoteForDifficulty(selectedDifficulty);
-            sampleTextDiv.innerHTML = wrapWordsInSpans(quote);
+            sampleTextDiv.innerHTML = wrapWordsInSpans(quote.text);
+            authorDisplay.textContent = quote.author || 'Unknown';
         } catch (error) {
             console.error('Error updating sample text:', error);
             const fallbackQuote = getBackupQuote();
-            sampleTextDiv.innerHTML = wrapWordsInSpans(fallbackQuote);
+            sampleTextDiv.innerHTML = wrapWordsInSpans(fallbackQuote.text);
+            authorDisplay.textContent = fallbackQuote.author;
         }
 
         userInput.disabled = false;
