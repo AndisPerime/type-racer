@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const API_URL = "https://zenquotes.io/api/random";
+    const API_URL = "https://api.quotable.io/random"; // More reliable free API
+    let lastFetchTime = 0;
+    const FETCH_COOLDOWN = 1000; // Minimum time between API calls in milliseconds
     let quotesCache = {
         easy: [],
         medium: [],
@@ -45,22 +47,39 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function fetchQuote() {
         try {
-            const response = await fetch(API_URL);
+            // Check if we need to wait before making another API call
+            const now = Date.now();
+            const timeSinceLastFetch = now - lastFetchTime;
+            if (timeSinceLastFetch < FETCH_COOLDOWN) {
+                await new Promise(resolve => setTimeout(resolve, FETCH_COOLDOWN - timeSinceLastFetch));
+            }
+
+            lastFetchTime = Date.now();
+            
+            const response = await fetch(API_URL, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+            
             const data = await response.json();
-            // Add validation for the API response
-            if (!Array.isArray(data) || !data[0] || !data[0].q || !data[0].a) {
-                throw new Error('Invalid API response format');
-            }
+            
+            // Quotable API format: { content: "quote text", author: "author name" }
             return {
-                text: data[0].q,
-                author: data[0].a
+                text: data.content,
+                author: data.author
             };
         } catch (error) {
             console.error('Error fetching quote:', error);
-            return null; // Return null instead of directly calling getBackupQuote
+            // Try to get a cached quote first before falling back to backup
+            const difficulty = difficultySelect.value;
+            const cachedQuote = getRandomCachedQuote(difficulty);
+            return cachedQuote || getBackupQuote();
         }
     }
 
@@ -89,8 +108,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function getQuoteForDifficulty(difficulty) {
-        // First try cache if available
-        if (quotesCache[difficulty].length > 0 && Math.random() < 0.3) {
+        // Try cache first with higher probability if API has been failing
+        const useCacheThreshold = localStorage.getItem('apiFailureCount') > 3 ? 0.6 : 0.3;
+        
+        if (quotesCache[difficulty].length > 0 && Math.random() < useCacheThreshold) {
             return getRandomCachedQuote(difficulty);
         }
 
@@ -102,27 +123,34 @@ document.addEventListener('DOMContentLoaded', function () {
             const fetchedQuote = await fetchQuote();
             if (fetchedQuote) {
                 const wordCount = fetchedQuote.text.split(' ').length;
+                
+                // Match quote length to difficulty
                 if ((difficulty === 'easy' && wordCount <= 8) ||
                     (difficulty === 'medium' && wordCount > 8 && wordCount <= 15) ||
                     (difficulty === 'hard' && wordCount > 15)) {
                     quote = fetchedQuote;
                     addToCache(difficulty, quote);
+                    // Reset API failure count on success
+                    localStorage.setItem('apiFailureCount', 0);
+                    break;
                 }
             }
             attempts++;
             
-            // Add small delay between attempts
             if (!quote && attempts < maxAttempts) {
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 1000));
             }
         }
 
-        // If no suitable quote found, try cache again
-        if (!quote && quotesCache[difficulty].length > 0) {
+        if (!quote) {
+            // Increment API failure count
+            const failureCount = parseInt(localStorage.getItem('apiFailureCount') || 0) + 1;
+            localStorage.setItem('apiFailureCount', failureCount);
+            
+            // Try cache one more time
             quote = getRandomCachedQuote(difficulty);
         }
 
-        // Finally, fallback to backup quotes if needed
         return quote || getBackupQuote();
     }
 
