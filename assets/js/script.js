@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const API_URL = "https://api.quotable.io/random"; // Using Quotable API instead as ZenQuotes has strict rate limits
+    const API_URL = "https://zenquotes.io/api/random";
     let quotesCache = {
         easy: [],
         medium: [],
@@ -29,7 +29,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error('Network response was not ok');
             }
             const data = await response.json();
-            return data.content;
+            // ZenQuotes returns an array with a single quote object
+            // Format: [{"q":"quote text","a":"author","h":"html encoded quote"}]
+            return data[0].q;
         } catch (error) {
             console.error('Error fetching quote:', error);
             return getBackupQuote(); // Fallback to backup quotes
@@ -63,21 +65,37 @@ document.addEventListener('DOMContentLoaded', function () {
     async function getQuoteForDifficulty(difficulty) {
         let maxAttempts = 3;
         let attempts = 0;
+        let quote = '';
 
         while (attempts < maxAttempts) {
-            const quote = await fetchQuote();
+            quote = await fetchQuote();
             const wordCount = quote.split(' ').length;
 
-            if ((difficulty === 'easy' && wordCount <= 8) ||
-                (difficulty === 'medium' && wordCount > 8 && wordCount <= 15) ||
-                (difficulty === 'hard' && wordCount > 15)) {
-                return quote;
+            // Cache the quote in appropriate difficulty level if it matches criteria
+            if (difficulty === 'easy' && wordCount <= 8) {
+                quotesCache.easy.push(quote);
+                break;
+            } else if (difficulty === 'medium' && wordCount > 8 && wordCount <= 15) {
+                quotesCache.medium.push(quote);
+                break;
+            } else if (difficulty === 'hard' && wordCount > 15) {
+                quotesCache.hard.push(quote);
+                break;
             }
             attempts++;
         }
 
-        // If we couldn't get an appropriate quote after max attempts, use backup
-        return getBackupQuote();
+        // If we couldn't get an appropriate quote, try using cached quote
+        if (attempts >= maxAttempts && quotesCache[difficulty].length > 0) {
+            quote = quotesCache[difficulty][Math.floor(Math.random() * quotesCache[difficulty].length)];
+        }
+
+        // If still no appropriate quote, use backup
+        if (!quote) {
+            quote = getBackupQuote();
+        }
+
+        return quote;
     }
 
     function wrapWordsInSpans(text) {
