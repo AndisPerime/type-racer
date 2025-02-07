@@ -39,3 +39,48 @@ header {
     font-size: 1.1rem;
     margin-bottom: 5px;
 }
+
+/* word highlighting */
+
+.word-span {
+    display: inline-block;
+    margin-right: 4px;
+}
+
+.correct {
+    color: #0066cc;
+}
+
+.incorrect {
+    color: #dc3545;
+}
+
+.pending {
+    color: #000000;
+}
+
+/* Modal Styles */
+.modal-header {
+    background-color: #ff8400;
+    color: white;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-body h6 {
+    color: #ff8400;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    font-weight: bold;
+}
+
+.modal-body li {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+}
+
+.btn-close {
+    background-color: white;
+}

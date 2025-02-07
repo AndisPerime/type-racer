@@ -26,6 +26,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const levelDisplay = document.getElementById('level');
     const wpmDisplay = document.getElementById('wpm');
     const retryButton = document.getElementById('retry-btn');
+    const instructionsBtn = document.getElementById('instructions-btn');
+    const instructionsModal = new bootstrap.Modal(document.getElementById('instructionsModal'));
 
     let startTime;
     let endTime;
@@ -173,6 +175,9 @@ document.addEventListener('DOMContentLoaded', function () {
     startButton.addEventListener('click', initializeTest);
     stopButton.addEventListener('click', stopTest);
     retryButton.addEventListener('click', retryTest);
+    instructionsBtn.addEventListener('click', () => {
+        instructionsModal.show();
+    });
     
     userInput.addEventListener('input', (e) => {
         if (e.target.value.length === 1) {

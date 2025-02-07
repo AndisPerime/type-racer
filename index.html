@@ -70,6 +70,50 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.min.js"></script>
     <!-- Add your own kit code to enable Font Aweseme -->
     <script src="https://kit.fontawesome.com/YOUR-KIT-CODE-HERE.js" crossorigin="anonymous"></script>
+    <script src="assets/js/script.js"></script>
 
+    <!-- Instructions Modal -->
+    <div class="modal fade" id="instructionsModal" tabindex="-1" aria-labelledby="instructionsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="instructionsModalLabel">How to Play TypeRacer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>Game Rules:</h6>
+                    <ol>
+                        <li>Select your preferred difficulty level (Easy, Medium, or Hard).</li>
+                        <li>Start typing in the text box to begin the test automatically.</li>
+                        <li>Type the exact text shown above, including punctuation and capitalization.</li>
+                        <li>Words will be highlighted in:
+                            <ul>
+                                <li><span class="text-primary">Blue</span> - Correctly typed words</li>
+                                <li><span class="text-danger">Red</span> - Incorrectly typed words</li>
+                                <li>Black - Pending words</li>
+                            </ul>
+                        </li>
+                        <li>The test will automatically stop when you correctly complete the text.</li>
+                        <li>Your results will show:
+                            <ul>
+                                <li>Current difficulty level</li>
+                                <li>Time taken in seconds</li>
+                                <li>Words Per Minute (WPM)</li>                                
+                            </ul>
+                        </li>
+                    </ol>
+                    <h6>Tips:</h6>
+                    <ul>
+                        <li>Practice regularly to improve your typing speed</li>
+                        <li>Focus on accuracy first, speed will come naturally</li>
+                        <li>Use the Retry button to practice with different texts</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-orange" data-bs-dismiss="modal">Got it!</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
