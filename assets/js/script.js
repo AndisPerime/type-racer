@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let startTime;
     let endTime;
+    let testStarted = false;
 
     function getRandomText(textArray) {
         const randomIndex = Math.floor(Math.random() * textArray.length);
@@ -86,12 +87,27 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function startTest() {
-        startTime = new Date();
+        if (!testStarted) {
+            startTime = new Date();
+            startButton.disabled = true;
+            stopButton.disabled = false;
+            testStarted = true;
+            
+            // Reset all words to pending state
+            const wordSpans = sampleTextDiv.getElementsByClassName('word-span');
+            Array.from(wordSpans).forEach(span => {
+                span.className = 'word-span pending';
+            });
+        }
+    }
+
+    function initializeTest() {
+        testStarted = false;
+        userInput.disabled = false;
+        userInput.value = '';
+        userInput.focus();
         startButton.disabled = true;
         stopButton.disabled = false;
-        userInput.disabled = false;
-        userInput.value = ''; // Clear the input area
-        userInput.focus();
         
         // Reset all words to pending state
         const wordSpans = sampleTextDiv.getElementsByClassName('word-span');
@@ -110,6 +126,7 @@ document.addEventListener('DOMContentLoaded', function () {
         startButton.disabled = false;
         stopButton.disabled = true;
         userInput.disabled = true;
+        testStarted = false;
     }
 
     function calculateWPM(timeTaken) {
@@ -135,11 +152,22 @@ document.addEventListener('DOMContentLoaded', function () {
         levelDisplay.textContent = selectedDifficulty.charAt(0).toUpperCase() + selectedDifficulty.slice(1);
     }
 
-    difficultySelect.addEventListener('change', updateSampleText);
-    startButton.addEventListener('click', startTest);
+    difficultySelect.addEventListener('change', () => {
+        updateSampleText();
+        initializeTest();
+    });
+    
+    startButton.addEventListener('click', initializeTest);
     stopButton.addEventListener('click', stopTest);
-    userInput.addEventListener('input', checkTypingAccuracy);
+    
+    userInput.addEventListener('input', (e) => {
+        if (e.target.value.length === 1) {
+            startTest();
+        }
+        checkTypingAccuracy();
+    });
 
-    // Initialise with a random text from the default difficulty level
+    // Initialize on page load
     updateSampleText();
+    initializeTest();
 });
