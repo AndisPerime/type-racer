@@ -84,3 +84,10 @@ header {
 .btn-close {
     background-color: white;
 }
+
+/* Loading spinner */
+.fa-spinner {
+    color: #ff8400;
+    font-size: 1.5rem;
+    margin: 1rem;
+}

@@ -1,21 +1,10 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const easyTexts = [
-        "The cat sat on the mat.",
-        "A quick brown fox jumps over the lazy dog.",
-        "She sells seashells by the seashore."
-    ];
-
-    const mediumTexts = [
-        "To be or not to be, that is the question.",
-        "All that glitters is not gold.",
-        "A journey of a thousand miles begins with a single step."
-    ];
-
-    const hardTexts = [
-        "It was the best of times, it was the worst of times.",
-        "In the beginning God created the heavens and the earth.",
-        "The only thing we have to fear is fear itself."
-    ];
+    const API_URL = "https://api.quotable.io/random"; // Using Quotable API instead as ZenQuotes has strict rate limits
+    let quotesCache = {
+        easy: [],
+        medium: [],
+        hard: []
+    };
 
     const difficultySelect = document.getElementById('difficulty');
     const sampleTextDiv = document.getElementById('sample-text');
@@ -33,9 +22,62 @@ document.addEventListener('DOMContentLoaded', function () {
     let endTime;
     let testStarted = false;
 
-    function getRandomText(textArray) {
-        const randomIndex = Math.floor(Math.random() * textArray.length);
-        return textArray[randomIndex];
+    async function fetchQuote() {
+        try {
+            const response = await fetch(API_URL);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            return data.content;
+        } catch (error) {
+            console.error('Error fetching quote:', error);
+            return getBackupQuote(); // Fallback to backup quotes
+        }
+    }
+
+    function getBackupQuote() {
+        const backupQuotes = {
+            easy: [
+                "The cat sat on the mat.",
+                "Life is what happens to you while you're busy making other plans.",
+                "Keep it simple, silly."
+            ],
+            medium: [
+                "To be or not to be, that is the question.",
+                "All that glitters is not gold, but it sure is shiny.",
+                "A journey of a thousand miles begins with a single step forward."
+            ],
+            hard: [
+                "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+                "In the end, it's not the years in your life that count, it's the life in your years.",
+                "The only way to do great work is to love what you do and never give up."
+            ]
+        };
+
+        const difficulty = difficultySelect.value;
+        const quotes = backupQuotes[difficulty];
+        return quotes[Math.floor(Math.random() * quotes.length)];
+    }
+
+    async function getQuoteForDifficulty(difficulty) {
+        let maxAttempts = 3;
+        let attempts = 0;
+
+        while (attempts < maxAttempts) {
+            const quote = await fetchQuote();
+            const wordCount = quote.split(' ').length;
+
+            if ((difficulty === 'easy' && wordCount <= 8) ||
+                (difficulty === 'medium' && wordCount > 8 && wordCount <= 15) ||
+                (difficulty === 'hard' && wordCount > 15)) {
+                return quote;
+            }
+            attempts++;
+        }
+
+        // If we couldn't get an appropriate quote after max attempts, use backup
+        return getBackupQuote();
     }
 
     function wrapWordsInSpans(text) {
@@ -44,19 +86,23 @@ document.addEventListener('DOMContentLoaded', function () {
         ).join(' ');
     }
 
-    function updateSampleText() {
-        let selectedDifficulty = difficultySelect.value;
-        let selectedText;
+    async function updateSampleText() {
+        const selectedDifficulty = difficultySelect.value;
+        
+        sampleTextDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+        userInput.disabled = true;
 
-        if (selectedDifficulty === 'easy') {
-            selectedText = getRandomText(easyTexts);
-        } else if (selectedDifficulty === 'medium') {
-            selectedText = getRandomText(mediumTexts);
-        } else if (selectedDifficulty === 'hard') {
-            selectedText = getRandomText(hardTexts);
+        try {
+            const quote = await getQuoteForDifficulty(selectedDifficulty);
+            sampleTextDiv.innerHTML = wrapWordsInSpans(quote);
+        } catch (error) {
+            console.error('Error updating sample text:', error);
+            const fallbackQuote = getBackupQuote();
+            sampleTextDiv.innerHTML = wrapWordsInSpans(fallbackQuote);
         }
 
-        sampleTextDiv.innerHTML = wrapWordsInSpans(selectedText);
+        userInput.disabled = false;
+        initializeTest();
     }
 
     function checkTypingAccuracy() {
@@ -155,21 +201,17 @@ document.addEventListener('DOMContentLoaded', function () {
         levelDisplay.textContent = selectedDifficulty.charAt(0).toUpperCase() + selectedDifficulty.slice(1);
     }
 
-    function retryTest() {
+    async function retryTest() {
         // Reset all displays
         timeDisplay.textContent = '0';
         wpmDisplay.textContent = '0';
         
         // Get a new random text
-        updateSampleText();
-        
-        // Initialize the test
-        initializeTest();
+        await updateSampleText();
     }
 
     difficultySelect.addEventListener('change', () => {
         updateSampleText();
-        initializeTest();
     });
     
     startButton.addEventListener('click', initializeTest);
