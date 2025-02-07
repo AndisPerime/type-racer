@@ -23,6 +23,26 @@ document.addEventListener('DOMContentLoaded', function () {
     let endTime;
     let testStarted = false;
 
+    // Add cache management
+    const MAX_CACHE_SIZE = 10; // Maximum quotes per difficulty level
+
+    function addToCache(difficulty, quote) {
+        if (!quotesCache[difficulty].some(q => q.text === quote.text)) {
+            quotesCache[difficulty].push(quote);
+            if (quotesCache[difficulty].length > MAX_CACHE_SIZE) {
+                quotesCache[difficulty].shift(); // Remove oldest quote if cache is full
+            }
+        }
+    }
+
+    function getRandomCachedQuote(difficulty) {
+        if (quotesCache[difficulty].length > 0) {
+            const randomIndex = Math.floor(Math.random() * quotesCache[difficulty].length);
+            return quotesCache[difficulty][randomIndex];
+        }
+        return null;
+    }
+
     async function fetchQuote() {
         try {
             const response = await fetch(API_URL);
@@ -30,13 +50,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error('Network response was not ok');
             }
             const data = await response.json();
+            // Add validation for the API response
+            if (!Array.isArray(data) || !data[0] || !data[0].q || !data[0].a) {
+                throw new Error('Invalid API response format');
+            }
             return {
                 text: data[0].q,
                 author: data[0].a
             };
         } catch (error) {
             console.error('Error fetching quote:', error);
-            return getBackupQuote(); // Fallback to backup quotes
+            return null; // Return null instead of directly calling getBackupQuote
         }
     }
 
@@ -65,39 +89,41 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function getQuoteForDifficulty(difficulty) {
+        // First try cache if available
+        if (quotesCache[difficulty].length > 0 && Math.random() < 0.3) {
+            return getRandomCachedQuote(difficulty);
+        }
+
         let maxAttempts = 3;
         let attempts = 0;
-        let quote = '';
+        let quote = null;
 
-        while (attempts < maxAttempts) {
-            quote = await fetchQuote();
-            const wordCount = quote.text.split(' ').length;
-
-            // Cache the quote in appropriate difficulty level if it matches criteria
-            if (difficulty === 'easy' && wordCount <= 8) {
-                quotesCache.easy.push(quote);
-                break;
-            } else if (difficulty === 'medium' && wordCount > 8 && wordCount <= 15) {
-                quotesCache.medium.push(quote);
-                break;
-            } else if (difficulty === 'hard' && wordCount > 15) {
-                quotesCache.hard.push(quote);
-                break;
+        while (attempts < maxAttempts && !quote) {
+            const fetchedQuote = await fetchQuote();
+            if (fetchedQuote) {
+                const wordCount = fetchedQuote.text.split(' ').length;
+                if ((difficulty === 'easy' && wordCount <= 8) ||
+                    (difficulty === 'medium' && wordCount > 8 && wordCount <= 15) ||
+                    (difficulty === 'hard' && wordCount > 15)) {
+                    quote = fetchedQuote;
+                    addToCache(difficulty, quote);
+                }
             }
             attempts++;
+            
+            // Add small delay between attempts
+            if (!quote && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
         }
 
-        // If we couldn't get an appropriate quote, try using cached quote
-        if (attempts >= maxAttempts && quotesCache[difficulty].length > 0) {
-            quote = quotesCache[difficulty][Math.floor(Math.random() * quotesCache[difficulty].length)];
+        // If no suitable quote found, try cache again
+        if (!quote && quotesCache[difficulty].length > 0) {
+            quote = getRandomCachedQuote(difficulty);
         }
 
-        // If still no appropriate quote, use backup
-        if (!quote) {
-            quote = getBackupQuote();
-        }
-
-        return quote;
+        // Finally, fallback to backup quotes if needed
+        return quote || getBackupQuote();
     }
 
     function wrapWordsInSpans(text) {
@@ -109,23 +135,37 @@ document.addEventListener('DOMContentLoaded', function () {
     async function updateSampleText() {
         const selectedDifficulty = difficultySelect.value;
         
-        sampleTextDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
-        authorDisplay.textContent = 'Loading...';
-        userInput.disabled = true;
-
         try {
-            const quote = await getQuoteForDifficulty(selectedDifficulty);
+            sampleTextDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+            authorDisplay.textContent = 'Loading...';
+            userInput.disabled = true;
+
+            // Add timeout to prevent infinite loading
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Request timeout')), 5000)
+            );
+
+            const quote = await Promise.race([
+                getQuoteForDifficulty(selectedDifficulty),
+                timeoutPromise
+            ]);
+
+            if (!quote) {
+                throw new Error('Failed to fetch quote');
+            }
+
             sampleTextDiv.innerHTML = wrapWordsInSpans(quote.text);
             authorDisplay.textContent = quote.author || 'Unknown';
+            
         } catch (error) {
             console.error('Error updating sample text:', error);
             const fallbackQuote = getBackupQuote();
             sampleTextDiv.innerHTML = wrapWordsInSpans(fallbackQuote.text);
             authorDisplay.textContent = fallbackQuote.author;
+        } finally {
+            userInput.disabled = false;
+            initializeTest();
         }
-
-        userInput.disabled = false;
-        initializeTest();
     }
 
     function checkTypingAccuracy() {
