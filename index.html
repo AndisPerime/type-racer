@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <title>TypeRacer</title>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 text-center my-4">
+                    <h1>TypeRacer</h1>
+                    <button class="btn btn-light mt-3" id="instructions-btn">
+                        <i class="fas fa-info-circle"></i> Instructions
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container my-5">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="input-group mb-3">
+                        <label class="input-group-text" for="difficulty">Select Difficulty</label>
+                        <select class="form-select" id="difficulty">
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+                    <div class="test-area">
+                        <p class="lead">Test your typing speed by typing the text shown below:</p>
+                        <div class="mb-3 p-3 border" id="sample-text">
+                            The cat sat on the mat.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label visually-hidden" for="user-input">Type Here</label>
+                        <textarea class="form-control" id="user-input" rows="6" placeholder="Click the start button to begin the test"></textarea>
+                    </div>
+                    <div class="mb-3 text-center">
+                        <button class="btn btn-lg btn-outline-orange" id="start-btn">Start</button>
+                        <button class="btn btn-lg btn-outline-orange" id="stop-btn">Stop</button>
+                        <button class="btn btn-lg btn-outline-orange" id="retry-btn">Retry</button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div id="results-area" class="text-center">
+                        <h2>Results</h2>
+                        <div>
+                            <p>Level: <span id="level">Easy</span></p>
+                            
+                        </div>
+                        <div>
+                            <p>Time: <span id="time">0</span>s</p>
+                        </div>
+                        <div>
+                            <p>WPM: <span id="wpm">0</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.min.js"></script>
+    <!-- Add your own kit code to enable Font Aweseme -->
+    <script src="https://kit.fontawesome.com/YOUR-KIT-CODE-HERE.js" crossorigin="anonymous"></script>
+
+</body>
+</html>

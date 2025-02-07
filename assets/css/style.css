@@ -1,0 +1,41 @@
+@import url("https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&family=Nunito:wght@400;700&display=swap");
+
+body {
+    font-family: Nunito, sans-serif;
+}
+
+h1 {
+    font-family: Alegreya, serif;
+}
+
+header {
+    background-color: #ff8400;
+    color: white;
+}
+
+/* buttons */
+
+.btn-outline-orange {
+    border: 2px solid #ff8400;
+    transition: color 0.3s ease-in-out, background-color 0.3s ease-in-out;
+    margin: 5px;
+}
+
+.btn-outline-orange:hover {
+    background-color: #ff8400;
+    color: #fff;
+}
+
+
+/* results-area */
+
+#results-area {
+    box-shadow: 0 0 10px #ff8400;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+#results-area p {
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
